@@ -16,6 +16,8 @@ def main():
     d = int(argv[3])
     iter = int(argv[4]) if len(argv) == 6 else ITER_DEFAULT
     input_file = argv[5] if len(argv) == 6 else argv[4]
+
+    # initialize points array
     points = []
     with open(input_file) as input:
         for line in input:
@@ -23,27 +25,31 @@ def main():
             points.append([float(temp[i]) for i in range(d)])
 
     # print(points)
-    clusters = [[] for i in range(k)]
+    # initialize the centroids to be first k points
     centroids = []
     for i in range(k):
         centroids.append(points[i])
+
     for i in range(iter):
+        clusters = [[] for i in range(k)]
         converged = True
+        # sort each point to appropriate cluster
         for p in points:
             clusters[find_closest_centroid(p, centroids)].append(p)
+        # for each cluster, calculate the new centroids
         for j in range(k):
             new_centroid = find_cluster_mean(clusters[j], d)
             if math.dist(centroids[j], new_centroid) >= EPSILON:
                 converged = False
             centroids[j] = new_centroid
         if converged:
-            print("EPS", i)
             break
+    # Round everything to 4 dec after point
     for c in centroids:
         for dim in range(d):
             c[dim] = round(c[dim], 4)
     print(centroids)
-
+    # ^^ NEED TO CHANGE THIS PRINT FORMAT
 
 def check_legal(argv):
     if len(argv) < 5 or len(argv) > 6:
