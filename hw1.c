@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     }
 
 
-    insertPointsFromStdin(points); // SOMETHING WRONG
+    insertPointsFromStdin(points);
 
     // Insert first k points as centroids
     for (int i = 0 ; i < k ; i++){
