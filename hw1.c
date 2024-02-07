@@ -22,9 +22,15 @@ int main(int argc, char *argv[])
 {
     // consts
 
-    int k, n, d, iter;
-    double **points;
-    double **centroids;
+    int k, n, d, iter; // consts
+    double **points; // A list of vectors
+    double **centroids; // A list of vectors
+    int i; // for the for loops
+
+    // Assisting methods
+    void insertPointsFromStdin(double**);
+    int checkLegal(int, int, int, int);
+
 
     // initializing and checking legality
     if (argc > 5 || argc < 4){
@@ -45,23 +51,43 @@ int main(int argc, char *argv[])
     }
     printf("%d\n%d\n%d\n%d\nTESTING", k, n, d, iter);
 
-    // Creating the array of points(represented as d-arrays)
-
-    points = malloc(sizeof(double) * n * d);
-    centroids = malloc(sizeof(double) * k * d);
-
-    for (int i = 0 ; i < k ; i++){
-        if (i < k){
-            centroids[i] = points[i];
-            continue;
-        }
-        // MAKE THE FUNC checkClosestCentroid(points[i])
+    // Allocate memory for empty array of points
+    // (represented as 'n' d-sized arrays)
+    points = malloc(sizeof(double*) * n);
+    for (i = 0; i < n ; i++) {
+        points[i] = malloc(sizeof(double) * d);
+    }
+    
+    // Allocate memory for empty array of centroids
+    // (represented as 'k' d-sized arrays)
+    centroids = malloc(sizeof(double*) * k);
+    for (i = 0; i < k ; i++) {
+        points[i] = malloc(sizeof(double) * d);
     }
 
-    
 
+    insertPointsFromStdin(points); // SOMETHING WRONG
 
+    // Insert first k points as centroids
+    for (int i = 0 ; i < k ; i++){
+        centroids[i] = points[i];
+    }
+
+    // FREE EVERYTHING BEFORE !
     return 0;
+}
+
+// Gets the points array and fills it according to input
+void insertPointsFromStdin(double **points){
+    char *line = NULL;
+    size_t len = 0;
+    int curr = 0;
+    double *p = points[curr];
+
+    while (getline(&line, &len, stdin) != -1){
+        // ISSUES AND ALSO CANT RUN IT FROM WINDOWS TERMINAL
+        printf("Line is\n%s", line);
+    }
 }
 
 // Done
