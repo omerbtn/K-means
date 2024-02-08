@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     int i; // for the for loops
 
     // Assisting methods
-    void insertPointsFromStdin(double**);
+    void insertPointsFromStdin(double**, int, int);
     int checkLegal(int, int, int, int);
 
 
@@ -53,20 +53,23 @@ int main(int argc, char *argv[])
 
     // Allocate memory for empty array of points
     // (represented as 'n' d-sized arrays)
-    points = malloc(sizeof(double*) * n);
+    // NEED ASSERT OF ENOUGH SPACE
+
+    points = calloc(n, sizeof(double*));
     for (i = 0; i < n ; i++) {
-        points[i] = malloc(sizeof(double) * d);
+        points[i] = calloc(d, sizeof(double));
     }
     
     // Allocate memory for empty array of centroids
     // (represented as 'k' d-sized arrays)
-    centroids = malloc(sizeof(double*) * k);
+    // NEED ASSERT OF ENOUGH SPACE
+
+    centroids = calloc(k, sizeof(double*));
     for (i = 0; i < k ; i++) {
-        points[i] = malloc(sizeof(double) * d);
+        points[i] = calloc(d, sizeof(double));
     }
 
-
-    insertPointsFromStdin(points);
+    insertPointsFromStdin(points, n, d);
 
     // Insert first k points as centroids
     for (int i = 0 ; i < k ; i++){
@@ -78,16 +81,49 @@ int main(int argc, char *argv[])
 }
 
 // Gets the points array and fills it according to input
-void insertPointsFromStdin(double **points){
+void insertPointsFromStdin(double **points, int n, int d){
     char *line = NULL;
     size_t len = 0;
-    int curr = 0;
-    double *p = points[curr];
+    int curr_in_temp;
+    double *p = points[0];
+    char *temp = NULL;
+    int i, j; // for loops
+    double double_val;
 
-    while (getline(&line, &len, stdin) != -1){
-        // ISSUES AND ALSO CANT RUN IT FROM WINDOWS TERMINAL
-        printf("Line is\n%s", line);
+    for (i = 0 ; i < n ; i++){
+        for (j = 0 ; j < d - 1 ; j++){
+            scanf("%f,", &double_val);
+            points[i][j] = double_val;
+        }
+        scanf("%f", &double_val);
+        points[i][d - 1] = double_val;
     }
+
+
+    /*
+    for (i = 0 ; i < n ; i++){
+        getline(&line, &len, stdin);
+        printf("Line is\n%s", line);
+        temp = malloc(sizeof(line));
+        // NEED ASSERT OF ENOUGH SPACE
+        
+        for (j = 0 ; j < d ; j++){
+            // parse line into points[i][j];
+            curr_in_temp = 0;
+            while (line[0] != ',' && line[0] != EOF && line[0] != '\n'){ 
+                temp[curr_in_temp++] = line[0]; // line++[0]?
+                line++;
+            }
+            line++;
+            temp[curr_in_temp] = '\0';
+            double_val = atof(temp);
+            points[i][j] = double_val;
+        }
+        free(temp); // ??
+        
+    }
+
+    */
 }
 
 // Done
