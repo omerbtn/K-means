@@ -9,8 +9,9 @@
 // Assisting methods
 void    insertPointsFromStdin(double**, int, int);
 int     checkLegal(int, int, int, int);
-int     findClosestCentroid(double*, double**);
-void    updatePoints(double**, double**, int*, int);
+int     findClosestCentroid(double*, double**, int, int);
+void    updatePoints(double**, double**, int*, int, int, int);
+double  dist(double*, double*, int);
 
 
 int main(int argc, char *argv[])
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
     k = atoi(argv[1]);
     n = atoi(argv[2]);
     d = atoi(argv[3]);
-    if (checkLegal(k,n,d,iter) == 0){
+    if (checkLegal(k, n, d, iter) == 0){
         return 0;
     }
 
@@ -64,26 +65,20 @@ int main(int argc, char *argv[])
         memcpy(centroids[i], points[i], sizeof(double) * d);
     }
 
-    cluster_index = calloc(n,sizeof(int));
+    cluster_index = calloc(n, sizeof(int));
 
     
     // go over k- for each cluster(0 - k-1) calculate new centroid and compare
     for (i = 0 ; i < iter ; i++){
-        updatePoints(points, centroids, cluster_index, n);
+        updatePoints(points, centroids, cluster_index, n, k, d);
 
-
-
-        if (updateCentroids(
-            centroids, cluster_index, points, n, d, k) == 1){
-            
+        if (updateCentroids(centroids, cluster_index, points, n, k, d) == 1){
+            break;
             // leave because of epsilon or something
-        }
-        
-        
+        }   
     }
 
-    // if less than epsilon terminate like python
-
+    // STILL HAVE TO PRINT THE CENTROIDS
 
     // FREE TWO DIMENSION ARRAYS PROPERLY WITH FOR
     free(points);
@@ -93,17 +88,24 @@ int main(int argc, char *argv[])
 }
 
 
+// return 1 if converged, 0 else
 int updateCentroids(
     double** centroids, int* cluster_index, double** points, 
-    int n, int d, int k){
+    int n, int k, int d){
 
     double* new_centroid;
-    int i, j, x, cnt;
+    int converged, i, j, x, cnt;
     
 
     new_centroid = calloc(d, sizeof(double));
+    converged = 1;
 
     for (i = 0 ; i < k ; i++){
+        // initalize new_centroid = [0, ... , 0]
+        for (x = 0; x < d; x++){
+            new_centroid[x] = 0;
+        }
+        
         cnt = 0;
         for (j = 0 ; j < n ; j++){
             if (cluster_index[j] == i){
@@ -112,43 +114,63 @@ int updateCentroids(
                 }
                 cnt++;
             }
-
         }
 
         for (x = 0 ; x < d ; x++){
             new_centroid[x] /= cnt; // WORKS?
         }
 
-        // also update centroids[i]
-        // return the check with the epsilon if converged
-        
+        if (dist(centroids[i], new_centroid, d) >= epsilon){
+            converged = 0;
+        }
 
+        centroids[i] = new_centroid;
     }
 
+    free(new_centroid);
 
-    return 0;
+    return converged;
 }
 
 
+int findClosestCentroid(double* point, double** centroids, int k, int d){
+    double minDist, currDist;
+    int minDistIndex;
+    int i;
 
-
-
-
-// DEAL WITH THIS
-int findClosestCentroid(double* point, double** centroids){
-    return 0;
+    minDist = dist(point, centroids[0], d);
+    minDistIndex = 0;
+    for (i = 1; i < k; i++){
+        currDist = dist(point, centroids[i], d);
+        if (currDist < minDist){
+            minDist = currDist;
+            minDistIndex = i;
+        }
+    }
+    return minDistIndex;
 }
 
 // assign every point- an index of closest cluster
 void updatePoints(
-    double** points, double** centroids, int* cluster_index, int n){
+    double** points, double** centroids, int* cluster_index, int n, int k, int d){
     
     int j;
     for (j = 0 ; j < n ; j++){
-        cluster_index[j] = findClosestCentroid(points[j], centroids);
+        cluster_index[j] = findClosestCentroid(points[j], centroids, k, d);
     }
 }
 
+// find euclidian distance between 2 d-dimension points
+double dist(double* p1, double* p2, int d){
+    double diff, sum = 0;
+    int i;
+
+    for (i = 0; i < d; i++){
+        diff = p1[i] - p2[i];
+        sum += diff * diff;
+    }
+    return sqrt(sum);
+}
 
 // Gets the points array and fills it according to input
 void insertPointsFromStdin(double **points, int n, int d){
