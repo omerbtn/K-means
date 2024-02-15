@@ -6,24 +6,23 @@
 #define     ITER_DEFAULT    200
 #define     epsilon         0.001
 
-// Assisting methods
 void    insertPointsFromStdin(double**, int, int);
 int     checkLegal(int, int, int, int);
 int     findClosestCentroid(double*, double**, int, int);
 void    updatePoints(double**, double**, int*, int, int, int);
+int     updateCentroids(double**, int*, double**, int, int, int);
 double  dist(double*, double*, int);
+void    printCentroids(double**, int, int);
 
 
 int main(int argc, char *argv[])
 {
-    // consts
-    int k, n, d, iter; // consts
-    double **points; // A list of vectors
-    double **centroids; // A list of vectors
-    int *cluster_index; // A list of clusters
-    int i, j; // for the for loops
+    int k, n, d, iter;
+    double **points;
+    double **centroids;
+    int *cluster_index;
+    int i, j; 
 
-    // initializing and checking legality
     if (argc > 5 || argc < 4){
         printf("\nToo little/many arguments in command line!");
         return 0;
@@ -40,55 +39,60 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    // Allocate memory for empty array of points
-    // (represented as 'n' d-sized arrays)
-    // NEED ASSERT OF ENOUGH SPACE
-
     points = calloc(n, sizeof(double*));
+    if (points == NULL){
+            printf("An Error Has Occurred");
+            return 1;
+        }
     for (i = 0; i < n ; i++) {
         points[i] = calloc(d, sizeof(double));
+        if (points[i] == NULL){
+            printf("An Error Has Occurred");
+            return 1;
+        }
     }
-    
-    // Allocate memory for empty array of centroids
-    // (represented as 'k' d-sized arrays)
-    // NEED ASSERT OF ENOUGH SPACE
 
     centroids = calloc(k, sizeof(double*));
+    if (centroids == NULL){
+        printf("An Error Has Occurred");
+        return 1;
+    }
     for (i = 0 ; i < k ; i++) {
         centroids[i] = calloc(d, sizeof(double));
+        if (centroids[i] == NULL){
+            printf("An Error Has Occurred");
+            return 1;
+        }
     }
 
     insertPointsFromStdin(points, n, d);
-
-    // Insert first k points as centroids
     for (i = 0 ; i < k ; i++){
         memcpy(centroids[i], points[i], sizeof(double) * d);
     }
 
     cluster_index = calloc(n, sizeof(int));
 
-    
-    // go over k- for each cluster(0 - k-1) calculate new centroid and compare
     for (i = 0 ; i < iter ; i++){
         updatePoints(points, centroids, cluster_index, n, k, d);
 
         if (updateCentroids(centroids, cluster_index, points, n, k, d) == 1){
             break;
-            // leave because of epsilon or something
         }   
     }
-
-    // STILL HAVE TO PRINT THE CENTROIDS
-
-    // FREE TWO DIMENSION ARRAYS PROPERLY WITH FOR
+    printCentroids(centroids, k, d);
+    for (i = 0 ; i < n ; i++){
+        free(points[i]);
+    }
     free(points);
+    for (i = 0 ; i < k ; i++){
+        free(centroids[i]);
+    }
     free(centroids);
     free(cluster_index);
     return 0;
 }
 
 
-// return 1 if converged, 0 else
 int updateCentroids(
     double** centroids, int* cluster_index, double** points, 
     int n, int k, int d){
@@ -101,7 +105,6 @@ int updateCentroids(
     converged = 1;
 
     for (i = 0 ; i < k ; i++){
-        // initalize new_centroid = [0, ... , 0]
         for (x = 0; x < d; x++){
             new_centroid[x] = 0;
         }
@@ -117,14 +120,14 @@ int updateCentroids(
         }
 
         for (x = 0 ; x < d ; x++){
-            new_centroid[x] /= cnt; // WORKS?
+            new_centroid[x] /= cnt; 
         }
 
         if (dist(centroids[i], new_centroid, d) >= epsilon){
             converged = 0;
         }
 
-        centroids[i] = new_centroid;
+        memcpy(centroids[i], new_centroid, sizeof(double) * d);
     }
 
     free(new_centroid);
@@ -150,7 +153,6 @@ int findClosestCentroid(double* point, double** centroids, int k, int d){
     return minDistIndex;
 }
 
-// assign every point- an index of closest cluster
 void updatePoints(
     double** points, double** centroids, int* cluster_index, int n, int k, int d){
     
@@ -160,7 +162,6 @@ void updatePoints(
     }
 }
 
-// find euclidian distance between 2 d-dimension points
 double dist(double* p1, double* p2, int d){
     double diff, sum = 0;
     int i;
@@ -172,9 +173,8 @@ double dist(double* p1, double* p2, int d){
     return sqrt(sum);
 }
 
-// Gets the points array and fills it according to input
 void insertPointsFromStdin(double **points, int n, int d){
-    int i, j; // for loops
+    int i, j;
     double double_val;
     for (i = 0 ; i < n ; i++){
         for (j = 0 ; j < d - 1 ; j++){
@@ -186,10 +186,7 @@ void insertPointsFromStdin(double **points, int n, int d){
     }
 }
 
-// Done
 int checkLegal(int k, int n, int d, int iter){
-    // Return 1 if legal, else 0
-    // Function will print the error (if any)
     if (k <= 1 || k >= n){
         printf ("Invalid number of clusters!");
         return 0;
@@ -207,4 +204,15 @@ int checkLegal(int k, int n, int d, int iter){
         return 0;
     }
     return 1;
+}
+
+void printCentroids(double** centroids, int k, int d){
+    int i, j;
+    
+    for (i = 0 ; i < k ; i++){
+        for (j = 0 ; j < d-1 ; j++){
+            printf("%.4lf,", centroids[i][j]);
+        }
+        printf("%.4lf\n", centroids[i][d-1]);
+    }
 }

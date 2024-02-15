@@ -8,7 +8,6 @@ EPSILON = 0.001
 def main():
     argv = sys.argv
     if not check_legal(argv):
-        # terminate
         return 0
 
     k = int(argv[1])
@@ -17,15 +16,12 @@ def main():
     iter = int(argv[4]) if len(argv) == 6 else ITER_DEFAULT
     input_file = argv[5] if len(argv) == 6 else argv[4]
 
-    # initialize points array
     points = []
     with open(input_file) as input:
         for line in input:
             temp = line[:-1].split(',')
             points.append([float(temp[i]) for i in range(d)])
 
-    # print(points)
-    # initialize the centroids to be first k points
     centroids = []
     for i in range(k):
         centroids.append(points[i])
@@ -33,10 +29,8 @@ def main():
     for i in range(iter):
         clusters = [[] for i in range(k)]
         converged = True
-        # sort each point to appropriate cluster
         for p in points:
             clusters[find_closest_centroid(p, centroids)].append(p)
-        # for each cluster, calculate the new centroids
         for j in range(k):
             new_centroid = find_cluster_mean(clusters[j], d)
             if math.dist(centroids[j], new_centroid) >= EPSILON:
@@ -48,18 +42,18 @@ def main():
     for c in centroids:
         for dim in range(d):
             c[dim] = round(c[dim], 4)
-    print(centroids)
+    printCentroids(centroids, k, d)
     # ^^ NEED TO CHANGE THIS PRINT FORMAT
 
 def check_legal(argv):
     if len(argv) < 5 or len(argv) > 6:
-        print("Number of args error")
+        print("An Error Has Occurred")
         # exit
     for i in range(1, len(argv) - 1):
         try:
             argv[i] = int(argv[i])
         except:
-            print("invalid input")
+            print("An Error Has Occurred")
             return False
     if argv[1] <= 1 or argv[1] >= argv[2]:
         print("Invalid number of clusters!")
@@ -96,6 +90,16 @@ def find_cluster_mean(points, d):
             dim_sum += p[i]
         mean.append(dim_sum / num_of_points)
     return mean
+
+
+def printCentroids(centroids, k, d):
+    res = ""
+    for i in range(k):
+        for j in range(d-1):
+            res += str(centroids[i][j]) + ","
+        print(res + str(centroids[i][d-1]))
+        res = ""
+    print()
 
 
 if __name__ == "__main__":
