@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
     double **points;
     double **centroids;
     int *cluster_index;
-    int i; 
+    int i, j, update; 
 
     if (argc > 5 || argc < 4){
-        printf("An Error Has Occurred");
-        return 1;
+        printf("An Error Has Occurred\n");
+        return 0;
     }
     if (argc == 4){
         iter = ITER_DEFAULT;
@@ -36,31 +36,47 @@ int main(int argc, char *argv[])
     n = atoi(argv[2]);
     d = atoi(argv[3]);
     if (checkLegal(k, n, d, iter) == 0){
-        return 1;
+        return 0;
     }
 
     points = calloc(n, sizeof(double*));
     if (points == NULL){
-            printf("An Error Has Occurred");
+            printf("An Error Has Occurred\n");
             return 1;
         }
-    for (i = 0; i < n ; i++) {
+    for (i = 0 ; i < n ; i++) {
         points[i] = calloc(d, sizeof(double));
         if (points[i] == NULL){
-            printf("An Error Has Occurred");
+            for (j = 0 ; j < i ; j++){
+                free(points[j]);
+            }
+            printf("An Error Has Occurred\n");
+            free (points);
             return 1;
         }
     }
 
     centroids = calloc(k, sizeof(double*));
     if (centroids == NULL){
-        printf("An Error Has Occurred");
+        printf("An Error Has Occurred\n");
+        for (j = 0 ; j < n ; j++){
+            free(points[j]);
+        }
+        free(points);
         return 1;
     }
     for (i = 0 ; i < k ; i++) {
         centroids[i] = calloc(d, sizeof(double));
         if (centroids[i] == NULL){
-            printf("An Error Has Occurred");
+            for (j = 0 ; j < i ; j++){
+                free(centroids[j]);
+            }
+            for (j = 0 ; j < n ; j++){
+                free(points[j]);
+            }
+            free(points);
+            free(centroids);
+            printf("An Error Has Occurred\n");
             return 1;
         }
     }
@@ -71,19 +87,31 @@ int main(int argc, char *argv[])
     }
 
     cluster_index = calloc(n, sizeof(int));
-    if (cluster_index == NULL){
-        printf("An Error Has Occurred");
-        return 1;
-    }
 
-    for (i = 0 ; i < iter ; i++){
-        updatePoints(points, centroids, cluster_index, n, k, d);
+    if (cluster_index != NULL){
+        for (i = 0 ; i < iter ; i++){
+            updatePoints(points, centroids, cluster_index, n, k, d);
 
-        if (updateCentroids(centroids, cluster_index, points, n, k, d) == 1){
-            break;
-        }   
+            update = updateCentroids(centroids, cluster_index, points, n, k, d);
+            if (update == 1){
+                break;
+            }
+            if (update == -1){
+                for (i = 0 ; i < n ; i++){
+                    free(points[i]);
+                }
+                free(points);
+                for (i = 0 ; i < k ; i++){
+                    free(centroids[i]);
+                }
+                free(centroids);
+                free(cluster_index);
+                return 1;
+            }
+        }
+        printCentroids(centroids, k, d);
     }
-    printCentroids(centroids, k, d);
+    
     for (i = 0 ; i < n ; i++){
         free(points[i]);
     }
@@ -107,6 +135,10 @@ int updateCentroids(
 
     new_centroid = calloc(d, sizeof(double));
     converged = 1;
+
+    if (new_centroid == NULL){
+        return -1;
+    }
 
     for (i = 0 ; i < k ; i++){
         for (x = 0; x < d; x++){
@@ -192,19 +224,19 @@ void insertPointsFromStdin(double **points, int n, int d){
 
 int checkLegal(int k, int n, int d, int iter){
     if (k <= 1 || k >= n){
-        printf ("Invalid number of clusters!");
+        printf ("Invalid number of clusters!\n");
         return 0;
     }
     if (n <= 1){
-        printf ("Invalid number of points!");
+        printf ("Invalid number of points!\n");
         return 0;
     }
     if (d < 1){
-        printf ("Invalid dimension of point!");
+        printf ("Invalid dimension of point!\n");
         return 0;
     }
     if (iter <= 1 || iter >= 1000){
-        printf ("Invalid maximum iteration!");
+        printf ("Invalid maximum iteration!\n");
         return 0;
     }
     return 1;
