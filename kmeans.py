@@ -8,7 +8,7 @@ EPSILON = 0.001
 def main():
     argv = sys.argv
     if not check_legal(argv):
-        return 0
+        return
 
     k = int(argv[1])
     n = int(argv[2])
@@ -38,17 +38,12 @@ def main():
             centroids[j] = new_centroid
         if converged:
             break
-    # Round everything to 4 dec after point
-    for c in centroids:
-        for dim in range(d):
-            c[dim] = round(c[dim], 4)
     printCentroids(centroids, k, d)
-    # ^^ NEED TO CHANGE THIS PRINT FORMAT
 
 def check_legal(argv):
     if len(argv) < 5 or len(argv) > 6:
         print("An Error Has Occurred")
-        # exit
+        return False
     for i in range(1, len(argv) - 1):
         try:
             argv[i] = int(argv[i])
@@ -96,8 +91,8 @@ def printCentroids(centroids, k, d):
     res = ""
     for i in range(k):
         for j in range(d-1):
-            res += str(centroids[i][j]) + ","
-        print(res + str(centroids[i][d-1]))
+            res += "{:.4f}".format(centroids[i][j]) + ","
+        print(res + "{:.4f}".format(centroids[i][d-1]), end="\r\n")
         res = ""
 
 def mydist(point1, point2):

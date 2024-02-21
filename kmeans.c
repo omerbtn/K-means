@@ -216,7 +216,7 @@ void printCentroids(double** centroids, int k, int d){
         for (j = 0 ; j < d-1 ; j++){
             printf("%.4f,", centroids[i][j]);
         }
-        printf("%.4f\n", centroids[i][d-1]);
+        printf("%.4f\r\n", centroids[i][d-1]);
     }
 }
 
