@@ -13,6 +13,7 @@ void    updatePoints(double**, double**, int*, int, int, int);
 int     updateCentroids(double**, int*, double**, int, int, int);
 double  dist(double*, double*, int);
 void    printCentroids(double**, int, int);
+void    freeMemory(double**, double**, int*, int, int);
 
 
 int main(int argc, char *argv[])
@@ -21,7 +22,7 @@ int main(int argc, char *argv[])
     double **points;
     double **centroids;
     int *cluster_index;
-    int i, j, update; 
+    int i, update; 
 
     if (argc > 5 || argc < 4){
         printf("An Error Has Occurred\n");
@@ -40,42 +41,28 @@ int main(int argc, char *argv[])
     }
 
     points = calloc(n, sizeof(double*));
-    if (points == NULL){
-            printf("An Error Has Occurred\n");
-            return 1;
-        }
+    centroids = calloc(k, sizeof(double*));
+    cluster_index = calloc(n, sizeof(int));
+
+    if (points == NULL || centroids == NULL || cluster_index == NULL){
+        freeMemory(points, centroids, cluster_index, n, k);
+        printf("An Error Has Occurred\n");
+        return 1;
+    }
+
     for (i = 0 ; i < n ; i++) {
         points[i] = calloc(d, sizeof(double));
         if (points[i] == NULL){
-            for (j = 0 ; j < i ; j++){
-                free(points[j]);
-            }
+            freeMemory(points, centroids, cluster_index, n, k);
             printf("An Error Has Occurred\n");
-            free (points);
             return 1;
         }
     }
 
-    centroids = calloc(k, sizeof(double*));
-    if (centroids == NULL){
-        printf("An Error Has Occurred\n");
-        for (j = 0 ; j < n ; j++){
-            free(points[j]);
-        }
-        free(points);
-        return 1;
-    }
     for (i = 0 ; i < k ; i++) {
         centroids[i] = calloc(d, sizeof(double));
         if (centroids[i] == NULL){
-            for (j = 0 ; j < i ; j++){
-                free(centroids[j]);
-            }
-            for (j = 0 ; j < n ; j++){
-                free(points[j]);
-            }
-            free(points);
-            free(centroids);
+            freeMemory(points, centroids, cluster_index, n, k);
             printf("An Error Has Occurred\n");
             return 1;
         }
@@ -86,41 +73,22 @@ int main(int argc, char *argv[])
         memcpy(centroids[i], points[i], sizeof(double) * d);
     }
 
-    cluster_index = calloc(n, sizeof(int));
+    for (i = 0 ; i < iter ; i++){
+        updatePoints(points, centroids, cluster_index, n, k, d);
 
-    if (cluster_index != NULL){
-        for (i = 0 ; i < iter ; i++){
-            updatePoints(points, centroids, cluster_index, n, k, d);
-
-            update = updateCentroids(centroids, cluster_index, points, n, k, d);
-            if (update == 1){
-                break;
-            }
-            if (update == -1){
-                for (i = 0 ; i < n ; i++){
-                    free(points[i]);
-                }
-                free(points);
-                for (i = 0 ; i < k ; i++){
-                    free(centroids[i]);
-                }
-                free(centroids);
-                free(cluster_index);
-                return 1;
-            }
+        update = updateCentroids(centroids, cluster_index, points, n, k, d);
+        if (update == 1){
+            break;
         }
-        printCentroids(centroids, k, d);
+        if (update == -1){
+            freeMemory(points, centroids, cluster_index, n, k);
+            printf("An Error Has Occurred\n");   
+            return 1;
+        }
     }
     
-    for (i = 0 ; i < n ; i++){
-        free(points[i]);
-    }
-    free(points);
-    for (i = 0 ; i < k ; i++){
-        free(centroids[i]);
-    }
-    free(centroids);
-    free(cluster_index);
+    printCentroids(centroids, k, d);
+    freeMemory(points, centroids, cluster_index, n, k);   
     return 0;
 }
 
@@ -132,7 +100,6 @@ int updateCentroids(
     double* new_centroid;
     int converged, i, j, x, cnt;
     
-
     new_centroid = calloc(d, sizeof(double));
     converged = 1;
 
@@ -191,8 +158,8 @@ int findClosestCentroid(double* point, double** centroids, int k, int d){
 
 void updatePoints(
     double** points, double** centroids, int* cluster_index, int n, int k, int d){
-    
     int j;
+    
     for (j = 0 ; j < n ; j++){
         cluster_index[j] = findClosestCentroid(points[j], centroids, k, d);
     }
@@ -251,4 +218,24 @@ void printCentroids(double** centroids, int k, int d){
         }
         printf("%.4f\n", centroids[i][d-1]);
     }
+}
+
+void freeMemory(double** points, double** centroids, int* cluster_index, int n, int k){
+    int i;
+
+    if (points != NULL){
+        for (i = 0; i < n; i++){
+            free(points[i]);
+        }
+        free(points);
+    }
+
+    if (centroids != NULL){
+        for (i = 0; i < k; i++){
+            free(centroids[i]);
+        }
+        free(centroids);
+    }
+
+    free(cluster_index);
 }
